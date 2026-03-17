@@ -19,7 +19,8 @@ export default async (request: Request) => {
     });
   }
 
-  const target = `${XC_API}?query=${query}&key=${encodeURIComponent(apiKey)}&per_page=50`;
+  const xcQuery = query.replace(/ /g, "+").replace(/"/g, "%22");
+  const target = `${XC_API}?query=${xcQuery}&key=${encodeURIComponent(apiKey)}&per_page=50`;
 
   const res = await fetch(target);
   const body = await res.text();
