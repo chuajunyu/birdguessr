@@ -1,4 +1,5 @@
 import "./style.css";
+import { xcAudioUrl } from "./api";
 import {
   SPECIES,
   createGameState,
@@ -45,7 +46,7 @@ function setPlayIcon(playing: boolean) {
 function startRound() {
   const rec = pickRound(state);
 
-  audio.src = `/audio/xc/${rec.id}/download`;
+  audio.src = xcAudioUrl(rec.id);
   audio.load();
   setPlayIcon(false);
 
