@@ -5,10 +5,20 @@ export const SPECIES: Species[] = [
   { gen: "Eudynamys", sp: "scolopaceus", en: "Asian Koel" },
   { gen: "Gallus", sp: "gallus", en: "Red Junglefowl" },
   { gen: "Pycnonotus", sp: "goiavier", en: "Yellow-vented Bulbul" },
+  { gen: "Acridotheres", sp: "javanicus", en: "Javan Myna" },
 ];
 
 function speciesKey(s: Species): string {
   return `${s.gen} ${s.sp}`;
+}
+
+function shuffle<T>(arr: T[]): T[] {
+  const out = [...arr];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
 }
 
 const LS_KEY = "birdle-best";
@@ -45,10 +55,13 @@ export async function loadRecordings(state: GameState): Promise<void> {
   }
 }
 
-export function pickRound(state: GameState): Recording {
+export function pickRound(state: GameState): {
+  rec: Recording;
+  choices: Species[];
+} {
   const speciesIndex = Math.floor(Math.random() * SPECIES.length);
-  const species = SPECIES[speciesIndex];
-  const key = speciesKey(species);
+  const correct = SPECIES[speciesIndex];
+  const key = speciesKey(correct);
   const recs = state.pool.get(key);
 
   if (!recs || recs.length === 0) {
@@ -57,8 +70,13 @@ export function pickRound(state: GameState): Recording {
 
   const rec = recs[Math.floor(Math.random() * recs.length)];
   state.current = rec;
+
+  const others = SPECIES.filter((s) => s.en !== correct.en);
+  const decoys = shuffle(others).slice(0, 2);
+  const choices = shuffle([correct, ...decoys]);
+
   state.answered = false;
-  return rec;
+  return { rec, choices };
 }
 
 export function getCorrectSpecies(rec: Recording): Species {

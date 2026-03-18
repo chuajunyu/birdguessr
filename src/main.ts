@@ -1,7 +1,6 @@
 import "./style.css";
 import { xcAudioUrl } from "./api";
 import {
-  SPECIES,
   createGameState,
   getCorrectSpecies,
   loadRecordings,
@@ -44,14 +43,14 @@ function setPlayIcon(playing: boolean) {
 }
 
 function startRound() {
-  const rec = pickRound(state);
+  const { rec, choices } = pickRound(state);
 
   audio.src = xcAudioUrl(rec.id);
   audio.load();
   setPlayIcon(false);
 
   choicesEl.innerHTML = "";
-  for (const s of SPECIES) {
+  for (const s of choices) {
     const btn = document.createElement("button");
     btn.className = "choice-btn";
     btn.textContent = s.en;
