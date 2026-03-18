@@ -17,6 +17,7 @@ const iconPause = $(".icon-pause") as Element;
 const choicesEl = $("#choices") as HTMLDivElement;
 const feedbackEl = $("#feedback") as HTMLDivElement;
 const feedbackText = $("#feedback-text") as HTMLParagraphElement;
+const locationEl = $("#location") as HTMLParagraphElement;
 const sonoImg = $("#sono-img") as HTMLImageElement;
 const xcLink = $("#xc-link") as HTMLAnchorElement;
 const nextBtn = $("#next-btn") as HTMLButtonElement;
@@ -85,6 +86,9 @@ function handleGuess(guessEn: string) {
   feedbackText.className = isCorrect ? "text-correct" : "text-wrong";
 
   const rec = state.current!;
+  const locParts = [rec.cnt, rec.loc].filter(Boolean);
+  locationEl.textContent = locParts.length ? `Recorded in ${locParts.join(", ")}` : "";
+  locationEl.classList.toggle("hidden", !locParts.length);
   sonoImg.src = ensureProtocol(rec.sono.med);
   xcLink.href = ensureProtocol(rec.url);
 

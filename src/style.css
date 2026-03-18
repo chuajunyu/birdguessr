@@ -169,6 +169,11 @@ header h1 {
   color: var(--wrong);
 }
 
+.feedback .location {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
 .sono-container {
   width: 100%;
   border-radius: var(--radius);
