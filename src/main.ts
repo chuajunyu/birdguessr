@@ -45,8 +45,20 @@ const closeHighscoreBtn = $("#close-highscore-btn") as HTMLButtonElement;
 const state = createGameState();
 const SHARE_NAME_KEY = "birdle-share-name";
 const DEFAULT_SHARE_NAME = "a birder";
+const LOADING_PHRASES = [
+  "Teaching the choir to chirp...",
+  "Warming up the warblers...",
+  "Cueing the dawn chorus...",
+  "Polishing the peep playlist...",
+  "Summoning the songbirds...",
+] as const;
 let activeHighScore: number | null = null;
 let pendingRunHighScore: number | null = null;
+
+function getRandomLoadingPhrase(): string {
+  const idx = Math.floor(Math.random() * LOADING_PHRASES.length);
+  return LOADING_PHRASES[idx];
+}
 
 function formatClock(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
@@ -430,6 +442,7 @@ if (!("share" in navigator)) {
 
 async function init() {
   try {
+    loadingEl.textContent = getRandomLoadingPhrase();
     await loadRecordings(state);
     loadingEl.classList.add("hidden");
     gameEl.classList.remove("hidden");
