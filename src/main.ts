@@ -62,6 +62,8 @@ const LOADING_PHRASES = [
 ] as const;
 let activeHighScore: number | null = null;
 let pendingRunHighScore: number | null = null;
+let hasUserInteractedWithAudio = false;
+let hasStartedFirstRound = false;
 
 function getRandomLoadingPhrase(): string {
     const idx = Math.floor(Math.random() * LOADING_PHRASES.length);
@@ -181,6 +183,14 @@ function renderTimelineUi() {
 
 function updateTimeline() {
     renderTimelineUi();
+}
+
+function markUserInteractedWithAudio() {
+    hasUserInteractedWithAudio = true;
+}
+
+function shouldAutoplayRound(isFirstRound: boolean): boolean {
+    return !isFirstRound && hasUserInteractedWithAudio;
 }
 
 function resetTimelineForNewRound(rec: Recording) {
@@ -369,12 +379,17 @@ function setPlayIcon(playing: boolean) {
 }
 
 function startRound() {
+    const isFirstRound = !hasStartedFirstRound;
+    hasStartedFirstRound = true;
     const { rec, choices } = pickRound(state);
 
     resetTimelineForNewRound(rec);
     audio.src = xcAudioUrl(rec.id);
     audio.load();
     setPlayIcon(false);
+    if (shouldAutoplayRound(isFirstRound)) {
+        audio.play().then(() => setPlayIcon(true)).catch(() => setPlayIcon(false));
+    }
 
     choicesEl.innerHTML = "";
     for (const s of choices) {
@@ -391,7 +406,10 @@ function startRound() {
         scientific.textContent = `${s.gen} ${s.sp}`;
 
         btn.append(common, scientific);
-        btn.addEventListener("click", () => handleGuess(s.en));
+        btn.addEventListener("click", () => {
+            markUserInteractedWithAudio();
+            handleGuess(s.en);
+        });
         choicesEl.appendChild(btn);
     }
 
@@ -471,6 +489,7 @@ function handleGuess(guessEn: string) {
 }
 
 playerUnified.addEventListener("click", () => {
+    markUserInteractedWithAudio();
     togglePlayback();
 });
 
@@ -503,7 +522,10 @@ audio.addEventListener("ended", () => {
     renderTimelineUi();
 });
 
-nextBtn.addEventListener("click", () => startRound());
+nextBtn.addEventListener("click", () => {
+    markUserInteractedWithAudio();
+    startRound();
+});
 closeHighscoreBtn.addEventListener("click", () => closeHighScoreModal());
 highscoreModalEl.addEventListener("click", (e) => {
     if (e.target === highscoreModalEl) closeHighScoreModal();
