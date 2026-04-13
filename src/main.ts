@@ -429,7 +429,7 @@ function handleGuess(guessEn: string) {
   recordingDatetimeSummaryEl.textContent = datetimeSummary ?? "";
   recordingDatetimeSummaryEl.classList.toggle("hidden", !datetimeSummary);
 
-  const safeSonoUrl = ensureSafeExternalUrl(rec.sono.large || rec.sono.med);
+  const safeSonoUrl = ensureSafeExternalUrl(rec.sono.med || rec.sono.large);
   if (safeSonoUrl !== "about:blank") {
     sonoImg.src = safeSonoUrl;
     sonoContainerEl.classList.remove("hidden");

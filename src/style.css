@@ -346,15 +346,12 @@ header h1 {
   overflow: hidden;
   background: var(--card);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  min-height: 180px;
 }
 
 .sono-container img {
   width: 100%;
-  height: clamp(180px, 28vh, 300px);
+  height: auto;
   display: block;
-  object-fit: cover;
-  object-position: center;
 }
 
 .recording-meta a {
