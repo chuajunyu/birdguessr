@@ -4,6 +4,7 @@ export default async (request: Request) => {
   try {
     const url = new URL(request.url);
     const query = url.searchParams.get("query");
+    const page = url.searchParams.get("page");
 
     if (!query) {
       return Response.json({ error: "missing query param" }, { status: 400 });
@@ -15,7 +16,11 @@ export default async (request: Request) => {
     }
 
     const xcQuery = query.replace(/ /g, "+").replace(/"/g, "%22");
-    const target = `${XC_API}?query=${xcQuery}&key=${encodeURIComponent(apiKey)}&per_page=50`;
+    const pageParam =
+      page && Number.isInteger(Number(page)) && Number(page) > 0
+        ? `&page=${encodeURIComponent(page)}`
+        : "";
+    const target = `${XC_API}?query=${xcQuery}&key=${encodeURIComponent(apiKey)}&per_page=50${pageParam}`;
 
     const res = await fetch(target);
     const body = await res.text();

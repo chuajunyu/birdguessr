@@ -3,12 +3,16 @@ import type { Recording, XCResponse } from "./types";
 const isDev = import.meta.env.DEV;
 const MIN_RECORDINGS_PER_SPECIES = 8;
 
-function xcApiUrl(query: string): string {
+function xcApiUrl(query: string, page?: number): string {
+  const pageParam =
+    typeof page === "number" && Number.isInteger(page) && page > 0
+      ? `&page=${page}`
+      : "";
   if (isDev) {
     const apiKey = import.meta.env.VITE_XC_API_KEY as string;
-    return `/api/xc?query=${query}&key=${encodeURIComponent(apiKey)}&per_page=50`;
+    return `/api/xc?query=${query}&key=${encodeURIComponent(apiKey)}&per_page=50${pageParam}`;
   }
-  return `/.netlify/functions/xc?query=${query}`;
+  return `/.netlify/functions/xc?query=${query}${pageParam}`;
 }
 
 export function xcAudioUrl(id: string): string {
@@ -19,13 +23,32 @@ export function xcAudioUrl(id: string): string {
 }
 
 async function fetchRecordingsByQuery(query: string): Promise<Recording[]> {
-  const url = xcApiUrl(query);
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`xeno-canto API error: ${res.status}`);
+  const firstPageRes = await fetch(xcApiUrl(query, 1));
+  if (!firstPageRes.ok) {
+    throw new Error(`xeno-canto API error: ${firstPageRes.status}`);
   }
-  const data: XCResponse = await res.json();
-  return data.recordings;
+
+  const firstPageData: XCResponse = await firstPageRes.json();
+  const parsedNumPages = Number.parseInt(String(firstPageData.numPages), 10);
+  const totalPages =
+    Number.isFinite(parsedNumPages) && parsedNumPages > 0 ? parsedNumPages : 1;
+
+  if (totalPages <= 1) {
+    return firstPageData.recordings;
+  }
+
+  const randomPage = Math.floor(Math.random() * totalPages) + 1;
+  if (randomPage === 1) {
+    return firstPageData.recordings;
+  }
+
+  const randomPageRes = await fetch(xcApiUrl(query, randomPage));
+  if (!randomPageRes.ok) {
+    throw new Error(`xeno-canto API error: ${randomPageRes.status}`);
+  }
+
+  const randomPageData: XCResponse = await randomPageRes.json();
+  return randomPageData.recordings;
 }
 
 function dedupeById(recordings: Recording[]): Recording[] {
