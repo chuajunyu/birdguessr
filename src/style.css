@@ -16,6 +16,7 @@
   --correct: #40916c;
   --wrong: #d62828;
   --radius: 12px;
+  --choice-avatar-col: 5.5rem;
 }
 
 body {
@@ -249,18 +250,56 @@ header h1 {
 }
 
 .choice-btn {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: var(--choice-avatar-col) minmax(0, 1fr);
+  column-gap: 0.9rem;
   align-items: center;
-  gap: 0.2rem;
-  padding: 1rem 1.25rem;
+  padding: 0.85rem 1.1rem;
   font-size: 1.05rem;
   border: 2px solid var(--accent);
   border-radius: var(--radius);
   background: var(--card);
   cursor: pointer;
   transition: background 0.2s, border-color 0.2s, color 0.2s;
-  text-align: center;
+  text-align: left;
+  width: 100%;
+}
+
+.choice-thumb-slot {
+  width: var(--choice-avatar-col);
+  min-width: var(--choice-avatar-col);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.choice-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+/* Circle is fully filled: cover scales and crops inside the image (no letterboxing). */
+.choice-thumb {
+  width: 5.25rem;
+  height: 5.25rem;
+  flex-shrink: 0;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 50%;
+  display: block;
+  box-shadow: 0 0 0 1px rgba(26, 46, 26, 0.1);
+}
+
+.choice-thumb--missing {
+  display: none;
+}
+
+.choice-btn:hover:not(:disabled) .choice-thumb {
+  filter: brightness(1.05);
 }
 
 .choice-common {
@@ -307,6 +346,31 @@ header h1 {
 .choice-btn.wrong .choice-common,
 .choice-btn.wrong .choice-scientific {
   color: white;
+}
+
+.choice-btn.correct .choice-thumb,
+.choice-btn.wrong .choice-thumb {
+  filter: brightness(1.08);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.45);
+}
+
+.species-image-wrap {
+  width: 100%;
+  max-width: 20rem;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--card);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.species-image-wrap img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+#species-more-photos:not(.hidden) {
+  margin-top: -0.25rem;
 }
 
 .feedback {

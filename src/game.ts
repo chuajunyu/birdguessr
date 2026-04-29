@@ -1,16 +1,32 @@
 import { fetchRecordings } from "./api";
+import { defaultBirdImageSrc } from "./speciesMedia";
 import type { GameState, Recording, Species } from "./types";
 
-export const SPECIES: Species[] = [
-  { gen: "Eudynamys", sp: "scolopaceus", en: "Asian Koel" },
-  { gen: "Gallus", sp: "gallus", en: "Red Junglefowl" },
-  { gen: "Pycnonotus", sp: "goiavier", en: "Yellow-vented Bulbul" },
-  { gen: "Geopelia", sp: "striata", en: "Zebra Dove" },
-  { gen: "Columba", sp: "livia", en: "Rock Dove" },
-  { gen: "Corvus", sp: "splendens", en: "House Crow"},
-  { gen: "Garrulax", sp: "leucolophus", en: "White-crested Laughingthrush"},
-  {gen: "Caprimulgus", sp: "macrurus", en: "Large-tailed Nightjar" }
+function bird(
+  gen: string,
+  sp: string,
+  en: string,
+  morePhotosUrl?: string,
+): Species {
+  const base: Species = {
+    gen,
+    sp,
+    en,
+    imageSrc: defaultBirdImageSrc({ gen, sp }),
+  };
+  if (morePhotosUrl) base.morePhotosUrl = morePhotosUrl;
+  return base;
+}
 
+export const SPECIES: Species[] = [
+  bird("Eudynamys", "scolopaceus", "Asian Koel"),
+  bird("Gallus", "gallus", "Red Junglefowl"),
+  bird("Pycnonotus", "goiavier", "Yellow-vented Bulbul"),
+  bird("Geopelia", "striata", "Zebra Dove"),
+  bird("Columba", "livia", "Rock Dove"),
+  bird("Corvus", "splendens", "House Crow"),
+  bird("Garrulax", "leucolophus", "White-crested Laughingthrush"),
+  bird("Caprimulgus", "macrurus", "Large-tailed Nightjar"),
 ];
 
 function speciesKey(s: Species): string {

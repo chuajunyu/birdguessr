@@ -27,6 +27,9 @@ const recordingDatetimeSummaryEl = $(
 ) as HTMLParagraphElement;
 const sonoContainerEl = $("#sono-container") as HTMLDivElement;
 const sonoImg = $("#sono-img") as HTMLImageElement;
+const speciesImageWrapEl = $("#species-image-wrap") as HTMLDivElement;
+const speciesImageEl = $("#species-image") as HTMLImageElement;
+const speciesMorePhotosEl = $("#species-more-photos") as HTMLParagraphElement;
 const recordingCreditEl = $("#recording-credit") as HTMLParagraphElement;
 const nextBtn = $("#next-btn") as HTMLButtonElement;
 const streakEl = $("#streak") as HTMLSpanElement;
@@ -405,7 +408,23 @@ function startRound() {
         scientific.className = "choice-scientific";
         scientific.textContent = `${s.gen} ${s.sp}`;
 
-        btn.append(common, scientific);
+        const textWrap = document.createElement("span");
+        textWrap.className = "choice-text";
+        textWrap.append(common, scientific);
+
+        const thumbSlot = document.createElement("span");
+        thumbSlot.className = "choice-thumb-slot";
+        if (s.imageSrc) {
+            const thumb = document.createElement("img");
+            thumb.className = "choice-thumb";
+            thumb.src = s.imageSrc;
+            thumb.alt = `${s.en} — reference photo`;
+            thumb.addEventListener("error", () => {
+                thumb.classList.add("choice-thumb--missing");
+            });
+            thumbSlot.append(thumb);
+        }
+        btn.append(thumbSlot, textWrap);
         btn.addEventListener("click", () => {
             markUserInteractedWithAudio();
             handleGuess(s.en);
@@ -449,6 +468,44 @@ function handleGuess(guessEn: string) {
         ? `Correct! That's the ${commonName} (${scientificName}).`
         : `Wrong! That was the ${commonName} (${scientificName}).`;
     feedbackText.className = isCorrect ? "text-correct" : "text-wrong";
+
+    speciesImageWrapEl.classList.add("hidden");
+    speciesImageEl.removeAttribute("src");
+    speciesImageEl.onload = null;
+    speciesImageEl.onerror = null;
+    if (correct.imageSrc) {
+        speciesImageEl.alt = `Illustration: ${correct.en}`;
+        speciesImageEl.onload = () => {
+            speciesImageWrapEl.classList.remove("hidden");
+        };
+        speciesImageEl.onerror = () => {
+            speciesImageWrapEl.classList.add("hidden");
+            speciesImageEl.removeAttribute("src");
+            speciesImageEl.onload = null;
+            speciesImageEl.onerror = null;
+        };
+        speciesImageEl.src = correct.imageSrc;
+        if (speciesImageEl.complete && speciesImageEl.naturalHeight > 0) {
+            speciesImageWrapEl.classList.remove("hidden");
+        }
+    } else {
+        speciesImageEl.alt = "";
+    }
+
+    speciesMorePhotosEl.textContent = "";
+    speciesMorePhotosEl.classList.add("hidden");
+    if (correct.morePhotosUrl) {
+        const safeGallery = ensureSafeExternalUrl(correct.morePhotosUrl);
+        if (safeGallery !== "about:blank") {
+            const link = document.createElement("a");
+            link.href = safeGallery;
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            link.textContent = "More photos";
+            speciesMorePhotosEl.append(link);
+            speciesMorePhotosEl.classList.remove("hidden");
+        }
+    }
 
     const rec = state.current!;
     const locParts = [rec.cnt, rec.loc].filter(Boolean);
