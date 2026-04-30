@@ -76,7 +76,7 @@ const IMAGE_CREDIT_BY_SLUG: Record<string, BirdImageCredit> = {
     label: "Photo: NST Bird Race (2007–2026) on iNaturalist",
     sourceUrl: "https://www.inaturalist.org/observations/346087236",
   },
-  "cinnyris-jugularis": {
+  "cinnyris-ornatus": {
     label: "Photo: NST Bird Race (2007–2026) on iNaturalist",
     sourceUrl: "https://www.inaturalist.org/observations/345825263",
   },

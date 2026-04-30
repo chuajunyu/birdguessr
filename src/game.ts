@@ -30,7 +30,7 @@ export const SPECIES: Species[] = [
   bird("Corvus", "splendens", "House Crow"),
   bird("Garrulax", "leucolophus", "White-crested Laughingthrush"),
   bird("Caprimulgus", "macrurus", "Large-tailed Nightjar"),
-  bird("Cinnyris", "jugularis", "Olive-backed Sunbird"),
+  bird("Cinnyris", "ornatus", "Ornate Sunbird"),
   bird("Orthotomus", "sutorius", "Common Tailorbird"),
   bird("Todiramphus", "chloris", "Collared Kingfisher"),
   bird("Psilopogon", "lineatus", "Lineated Barbet"),

@@ -32,14 +32,16 @@ export function getLocalRecordingsForSpecies(
 ): Promise<LocalRecording[]> {
   const key = speciesFolderKey(gen, sp);
   return loadLocalAudioManifest().then((manifest) => {
-    const files = manifest[key] ?? [];
+    const fallbackKey =
+      key === "cinnyris-ornatus" && !manifest[key] ? "cinnyris-jugularis" : key;
+    const files = manifest[fallbackKey] ?? [];
     return files.map((relativePath, idx) => ({
       source: "local",
       id: `local-${key}-${idx + 1}`,
       gen,
       sp,
       en,
-      src: `/audio/local/${key}/${relativePath}`,
+      src: `/audio/local/${fallbackKey}/${relativePath}`,
       label: fileLabelFromPath(relativePath),
       length: "",
     }));

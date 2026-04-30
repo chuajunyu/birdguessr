@@ -82,11 +82,19 @@ function dedupeById(recordings: XCRecording[]): XCRecording[] {
   return out;
 }
 
+function resolveXcQuerySpecies(gen: string, sp: string): { gen: string; sp: string } {
+  if (gen.toLowerCase() === "cinnyris" && sp.toLowerCase() === "ornatus") {
+    return { gen: "Cinnyris", sp: "jugularis" };
+  }
+  return { gen, sp };
+}
+
 export async function fetchRecordings(
   gen: string,
   sp: string,
 ): Promise<XCRecording[]> {
-  const base = `gen:${gen}+sp:${sp}+cnt:singapore`;
+  const querySpecies = resolveXcQuerySpecies(gen, sp);
+  const base = `gen:${querySpecies.gen}+sp:${querySpecies.sp}+cnt:singapore`;
   const [qualityA, qualityB] = await Promise.all([
     fetchRecordingsByQuery(`${base}+q:A`),
     fetchRecordingsByQuery(`${base}+q:B`),
