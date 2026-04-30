@@ -1,6 +1,6 @@
 import "./style.css";
 import { xcAudioUrl } from "./api";
-import type { Recording } from "./types";
+import type { Recording, XCRecording } from "./types";
 import {
     createGameState,
     getCorrectSpecies,
@@ -261,7 +261,7 @@ function normalizeSingleMeta(rawValue: string | undefined): string | null {
     return toTitleCase(value);
 }
 
-function buildRecordingDatetimeSummary(rec: Recording): string | null {
+function buildRecordingDatetimeSummary(rec: XCRecording): string | null {
     const date = normalizeSingleMeta(rec.date);
     const time = normalizeSingleMeta(rec.time);
     if (date && time) return `Recorded on ${date} at ${time}.`;
@@ -387,7 +387,7 @@ function startRound() {
     const { rec, choices } = pickRound(state);
 
     resetTimelineForNewRound(rec);
-    audio.src = xcAudioUrl(rec.id);
+    audio.src = rec.source === "xc" ? xcAudioUrl(rec.id) : rec.src;
     audio.load();
     setPlayIcon(false);
     if (shouldAutoplayRound(isFirstRound)) {
@@ -508,39 +508,52 @@ function handleGuess(guessEn: string) {
     }
 
     const rec = state.current!;
-    const locParts = [rec.cnt, rec.loc].filter(Boolean);
-    locationEl.textContent = locParts.length
-        ? `Recorded in ${locParts.join(", ")}`
-        : "";
-    locationEl.classList.toggle("hidden", !locParts.length);
+    if (rec.source === "xc") {
+        const locParts = [rec.cnt, rec.loc].filter(Boolean);
+        locationEl.textContent = locParts.length
+            ? `Recorded in ${locParts.join(", ")}`
+            : "";
+        locationEl.classList.toggle("hidden", !locParts.length);
 
-    const soundSummary = buildSoundSummary(rec.type);
-    soundTypeSummaryEl.textContent = soundSummary ?? "";
-    soundTypeSummaryEl.classList.toggle("hidden", !soundSummary);
+        const soundSummary = buildSoundSummary(rec.type);
+        soundTypeSummaryEl.textContent = soundSummary ?? "";
+        soundTypeSummaryEl.classList.toggle("hidden", !soundSummary);
 
-    const datetimeSummary = buildRecordingDatetimeSummary(rec);
-    recordingDatetimeSummaryEl.textContent = datetimeSummary ?? "";
-    recordingDatetimeSummaryEl.classList.toggle("hidden", !datetimeSummary);
+        const datetimeSummary = buildRecordingDatetimeSummary(rec);
+        recordingDatetimeSummaryEl.textContent = datetimeSummary ?? "";
+        recordingDatetimeSummaryEl.classList.toggle("hidden", !datetimeSummary);
 
-    const safeSonoUrl = ensureSafeExternalUrl(rec.sono.med || rec.sono.large);
-    if (safeSonoUrl !== "about:blank") {
-        sonoImg.src = safeSonoUrl;
-        sonoContainerEl.classList.remove("hidden");
+        const safeSonoUrl = ensureSafeExternalUrl(rec.sono.med || rec.sono.large);
+        if (safeSonoUrl !== "about:blank") {
+            sonoImg.src = safeSonoUrl;
+            sonoContainerEl.classList.remove("hidden");
+        } else {
+            sonoImg.src = "";
+            sonoContainerEl.classList.add("hidden");
+        }
+
+        const safeXcUrl = ensureSafeExternalUrl(rec.url);
+        const safeLicUrl = ensureSafeExternalUrl(rec.lic ?? "");
+        const recordist = normalizeSingleMeta(rec.rec) ?? "unknown recordist";
+        const sourceLink = `<a href="${safeXcUrl}" target="_blank" rel="noopener noreferrer">Xeno-canto</a>`;
+        const licenseLink =
+            safeLicUrl !== "about:blank"
+                ? ` · <a href="${safeLicUrl}" target="_blank" rel="noopener noreferrer">Source recording license</a>`
+                : "";
+        recordingCreditEl.innerHTML = `Audio via ${sourceLink}, submitted by ${escapeHtml(recordist)}${licenseLink}.`;
+        recordingCreditEl.classList.remove("hidden");
     } else {
+        locationEl.textContent = "";
+        locationEl.classList.add("hidden");
+        soundTypeSummaryEl.textContent = "";
+        soundTypeSummaryEl.classList.add("hidden");
+        recordingDatetimeSummaryEl.textContent = "";
+        recordingDatetimeSummaryEl.classList.add("hidden");
         sonoImg.src = "";
         sonoContainerEl.classList.add("hidden");
+        recordingCreditEl.textContent = `Audio recorded by Jun Yu and Joshua (${rec.label}).`;
+        recordingCreditEl.classList.remove("hidden");
     }
-
-    const safeXcUrl = ensureSafeExternalUrl(rec.url);
-    const safeLicUrl = ensureSafeExternalUrl(rec.lic ?? "");
-    const recordist = normalizeSingleMeta(rec.rec) ?? "unknown recordist";
-    const sourceLink = `<a href="${safeXcUrl}" target="_blank" rel="noopener noreferrer">Xeno-canto</a>`;
-    const licenseLink =
-        safeLicUrl !== "about:blank"
-            ? ` · <a href="${safeLicUrl}" target="_blank" rel="noopener noreferrer">Source recording license</a>`
-            : "";
-    recordingCreditEl.innerHTML = `Audio via ${sourceLink}, submitted by ${escapeHtml(recordist)}${licenseLink}.`;
-    recordingCreditEl.classList.remove("hidden");
 
     feedbackEl.classList.remove("hidden");
 }

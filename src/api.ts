@@ -1,7 +1,22 @@
-import type { Recording, XCResponse } from "./types";
+import type { XCRecording, XCResponse } from "./types";
 
 const isDev = import.meta.env.DEV;
 const MIN_RECORDINGS_PER_SPECIES = 8;
+
+/** True if XC returned enough data to play this clip (restricted species omit/redact `file`). */
+export function isXcRecordingPlayable(rec: {
+  file?: string;
+  _meta?: { redacted_fields?: Record<string, string> };
+}): boolean {
+  const rf = rec._meta?.redacted_fields;
+  if (rf) {
+    if (rf.file === "restricted_species" || rf["file-name"] === "restricted_species") {
+      return false;
+    }
+  }
+  const file = typeof rec.file === "string" ? rec.file.trim() : "";
+  return file.length > 0;
+}
 
 function xcApiUrl(query: string, page?: number): string {
   const pageParam =
@@ -22,7 +37,7 @@ export function xcAudioUrl(id: string): string {
   return `https://xeno-canto.org/${id}/download`;
 }
 
-async function fetchRecordingsByQuery(query: string): Promise<Recording[]> {
+async function fetchRecordingsByQuery(query: string): Promise<XCRecording[]> {
   const firstPageRes = await fetch(xcApiUrl(query, 1));
   if (!firstPageRes.ok) {
     throw new Error(`xeno-canto API error: ${firstPageRes.status}`);
@@ -33,13 +48,18 @@ async function fetchRecordingsByQuery(query: string): Promise<Recording[]> {
   const totalPages =
     Number.isFinite(parsedNumPages) && parsedNumPages > 0 ? parsedNumPages : 1;
 
+  const toXc = (rec: (typeof firstPageData.recordings)[number]): XCRecording => ({
+    ...rec,
+    source: "xc",
+  });
+
   if (totalPages <= 1) {
-    return firstPageData.recordings;
+    return firstPageData.recordings.map(toXc).filter(isXcRecordingPlayable);
   }
 
   const randomPage = Math.floor(Math.random() * totalPages) + 1;
   if (randomPage === 1) {
-    return firstPageData.recordings;
+    return firstPageData.recordings.map(toXc).filter(isXcRecordingPlayable);
   }
 
   const randomPageRes = await fetch(xcApiUrl(query, randomPage));
@@ -48,12 +68,12 @@ async function fetchRecordingsByQuery(query: string): Promise<Recording[]> {
   }
 
   const randomPageData: XCResponse = await randomPageRes.json();
-  return randomPageData.recordings;
+  return randomPageData.recordings.map(toXc).filter(isXcRecordingPlayable);
 }
 
-function dedupeById(recordings: Recording[]): Recording[] {
+function dedupeById(recordings: XCRecording[]): XCRecording[] {
   const seen = new Set<string>();
-  const out: Recording[] = [];
+  const out: XCRecording[] = [];
   for (const rec of recordings) {
     if (seen.has(rec.id)) continue;
     seen.add(rec.id);
@@ -65,7 +85,7 @@ function dedupeById(recordings: Recording[]): Recording[] {
 export async function fetchRecordings(
   gen: string,
   sp: string,
-): Promise<Recording[]> {
+): Promise<XCRecording[]> {
   const base = `gen:${gen}+sp:${sp}+cnt:singapore`;
   const [qualityA, qualityB] = await Promise.all([
     fetchRecordingsByQuery(`${base}+q:A`),

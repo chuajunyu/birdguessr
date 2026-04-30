@@ -1,4 +1,10 @@
-export interface Recording {
+/** Present on some API rows when XC redacts sensitive fields (e.g. restricted species). */
+export interface XCRecordingMeta {
+  redacted_fields?: Record<string, string>;
+}
+
+export interface XCRecording {
+  source: "xc";
   id: string;
   gen: string;
   sp: string;
@@ -9,7 +15,9 @@ export interface Recording {
   q: string;
   length: string;
   url: string;
-  file: string;
+  /** Omitted or empty when restricted; see `_meta.redacted_fields`. */
+  file?: string;
+  _meta?: XCRecordingMeta;
   rec?: string;
   lat?: string;
   lng?: string;
@@ -42,7 +50,25 @@ export interface XCResponse {
   numSpecies: string;
   page: number;
   numPages: number;
-  recordings: Recording[];
+  recordings: Omit<XCRecording, "source">[];
+}
+
+export interface LocalRecording {
+  source: "local";
+  id: string;
+  gen: string;
+  sp: string;
+  en: string;
+  src: string;
+  label: string;
+  length: string;
+}
+
+export type Recording = XCRecording | LocalRecording;
+
+export interface SpeciesAudioPool {
+  xc: XCRecording[];
+  local: LocalRecording[];
 }
 
 export interface Species {
@@ -53,10 +79,15 @@ export interface Species {
   imageSrc?: string;
   /** Optional gallery link (e.g. iNaturalist taxon page). */
   morePhotosUrl?: string;
+  /**
+   * When true and local audio files exist, rounds for this species use only local
+   * audio (no Xeno-Canto mixing or 25% XC floor). Also use when XC has no usable recordings.
+   */
+  audioLocalOnly?: boolean;
 }
 
 export interface GameState {
-  pool: Map<string, Recording[]>;
+  pool: Map<string, SpeciesAudioPool>;
   current: Recording | null;
   streak: number;
   best: number;
